@@ -1,0 +1,274 @@
+using System;
+using System.Linq;
+using System.IO;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+
+/**
+ * Auto-generated code below aims at helping you parse
+ * the standard input according to the problem statement.
+ **/
+class Player
+{
+    static void Main(string[] args)
+    {
+        string[] inputs;
+        inputs = Console.ReadLine().Split(' ');
+        int N = int.Parse(inputs[0]); // the total number of nodes in the level, including the gateways
+        int L = int.Parse(inputs[1]); // the number of links
+        int E = int.Parse(inputs[2]); // the number of exit gateways
+        
+        Graph graph = new Graph(N);
+        
+        for (int i = 0; i < L; i++)
+        {
+            inputs = Console.ReadLine().Split(' ');
+            int N1 = int.Parse(inputs[0]); // N1 and N2 defines a link between these nodes
+            int N2 = int.Parse(inputs[1]);
+            
+            graph.Link(N1, N2);
+        }
+        for (int i = 0; i < E; i++)
+        {
+            int EI = int.Parse(Console.ReadLine()); // the index of a gateway node
+            
+            graph.SetGate(EI);
+        }
+
+        // game loop
+        while (true)
+        {
+            int SI = int.Parse(Console.ReadLine()); // The index of the node on which the Skynet agent is positioned this turn
+
+            // Write an action using Console.WriteLine()
+            // To debug: Console.Error.WriteLine("Debug messages...");
+            //Console.Error.WriteLine(N+" "+L+" "+E);
+            //graph.Print();
+            
+            Console.WriteLine(graph.LinkToSever(SI)); // Example: 0 1 are the indices of the nodes you wish to sever the link between
+            graph.Reset();
+        }
+    }
+}
+
+public class Graph
+{
+    List<Node> nodes = new List<Node>(); //List of nodes
+    
+    //Creates a graph with the given number of nodes
+    public Graph(int num){
+        for(int i=0;i<num;i++){
+            nodes.Add(new Node(i));
+        }
+    }
+    
+    public void SetGate(int i){
+        nodes[i].SetGate();
+    }
+    
+    //Links the two named nodes
+    public bool Link(int i, int j){
+        nodes[i].Link(j);
+        nodes[j].Link(i);
+        return true;
+    }
+    
+    public bool Sever(int i, int j){
+        nodes[i].Sever(j);
+        nodes[j].Sever(i);
+        return true;
+    }
+    
+    public void Print(){
+        foreach(Node node in nodes){
+            node.Print();
+        }
+    }
+    
+    public void Reset(){
+        foreach(Node node in nodes)
+            node.Reset();
+    }
+    
+    public int FindGate(){
+        for(int i=0; i<nodes.Count; i++){
+            if(nodes[i].IsGate()) return i;
+        }
+        return -1;
+    }
+    
+    public int[] FindGates(){
+        List<int> gates = new List<int>();
+        for(int i=0; i<nodes.Count; i++){
+            if(nodes[i].IsGate()) gates.Add(i);
+        }
+        return gates.ToArray();
+    }
+    /*
+    public string LinkToSever(int agent){
+        int gate = FindGate();
+        int node = -1;
+        int dist = 0;
+        int shortest = -1;
+        foreach(int i in nodes[gate].Links()){
+            if(AgentPath(i, agent, ref dist)){
+                //shortest = shortest == null ? dist : dist < shortest ? dist : shortest;
+                if(shortest == -1 || dist < shortest){
+                    node = i;
+                    shortest = dist;
+                }
+                    
+            }
+            dist = 0;
+        }
+        Sever(gate, node);
+        return gate+" "+node;
+    }
+    */
+    public string LinkToSever(int agent){
+        Queue Q = new Queue();
+        /*
+        Q.Enqueue(agent);
+        nodes[agent].Visit();
+        while(Q.Count > 0){
+            int i = (int)Q.Dequeue();
+            foreach(int j in nodes[i].Links()){
+                if(nodes[j].IsGate())
+                    return i +" " + j;
+                else if(!(nodes[j].Visited())){
+                    Q.Enqueue(j);
+                    nodes[j].Visit();
+                }
+            }
+        }
+        return "not found";
+        */
+        for(int k=0;k < nodes.Count; k++){
+            if(nodes[k].IsGate()){
+                Q.Enqueue(k);
+                nodes[k].Visit();
+            }
+        }
+        while(Q.Count > 0){
+            int i = (int)Q.Dequeue();
+            foreach(int j in nodes[i].Links()){
+                if(j == agent)
+                    return i +" " + j;
+                else if(!(nodes[j].Visited())){
+                    Q.Enqueue(j);
+                    nodes[j].Visit();
+                }
+            }
+        }
+        return "not found";
+        
+    }
+    
+    /*
+    public bool AgentPath(int node, int agent, ref int dist){
+        int shortest = -1;
+        int agentDist = 0;
+        bool path = false;
+        
+        nodes[node].Visit();
+        if(node == agent){
+            dist += 1;
+            return true;
+        }
+        foreach(int i in nodes[node].Links()){
+            if(nodes[i].Visited() == false)
+                if(AgentPath(i, agent, ref agentDist)){
+                    if(shortest == -1 || agentDist < shortest)
+                        shortest = agentDist;
+                    path = true;
+                    Console.Error.WriteLine("Agent distance"+agentDist);
+                }
+                else
+                    Console.Error.WriteLine("No agent");
+                agentDist = 0;
+        }
+        if(path){
+            dist += agentDist;
+            return true;
+        }
+        else
+            return false;
+    }
+    */
+}
+
+public class Node
+{
+    int name; //Name of the node
+    List<int> links = new List<int>(); //List of which nodes are linked to
+    bool gate = false;
+    bool v = false; //If the node has been visited
+    //int exp = 0;
+    
+    public bool Equals(Node other)
+        {
+            if (other == null) return false;
+            return (this.name.Equals(other.name));
+        }
+        
+    // Default comparer for Node type. 
+    public int CompareTo(Node other)
+    {
+          // A null value means that this object is greater. 
+        if (other == null)
+            return 1;
+
+        else 
+            return this.links.Count().CompareTo(other.links.Count());
+    }
+    
+    public Node(int Name){
+        name = Name;
+    }
+    public void SetGate(){
+        gate = true;
+    }
+    
+    public bool IsGate(){
+        return gate;
+    }
+    
+    public void Visit(){
+        v = true;
+        //exp = 1;
+    }
+    /*
+    public void Explored(){
+        exp = 2;
+    }
+    */
+    public void Reset(){
+        v = false;
+        //exp = 0;
+    }
+    
+    public void Sever(int i){
+        links.Remove(i);
+    }
+    
+    public void Link(int i){
+        links.Add(i);
+    }
+    
+    public void Print(){
+        Console.Error.WriteLine(name+":");
+        foreach(int i in links){
+            Console.Error.WriteLine(" "+i);
+        }
+    }
+    
+    public List<int> Links(){
+        return links;
+    }
+    
+    public bool Visited(){
+        return v;
+    }
+    
+}

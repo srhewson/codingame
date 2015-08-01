@@ -1,0 +1,71 @@
+using System;
+using System.Linq;
+using System.IO;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+
+/**
+ * Don't let the machines win. You are humanity's last hope...
+ **/
+class Player
+{
+    static void Main(string[] args)
+    {
+        int width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
+        int height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
+        int[,] grid = new int[width,height];
+        for (int i = 0; i < height; i++)
+        {
+            string line = Console.ReadLine(); // width characters, each either 0 or .
+            for(int j=0; j<width; j++)
+                grid[j,i] = line[j] == '0' ? 1 : 0;
+        }
+
+        // Write an action using Console.WriteLine()
+        // To debug: Console.Error.WriteLine("Debug messages...");
+
+        for(int i=0; i< height; i++){
+            string row = "";
+            for(int j=0; j<width; j++){
+                row += grid[j,i];
+            }
+            Console.Error.WriteLine(row);
+        }
+        while(true){
+            string output = "";
+            //int k = -1;
+            for(int i=0; i< height; i++){
+                for(int j=0; j<width; j++){
+                    if(grid[j,i] == 1){
+                        output += j+" "+i+" ";
+                        
+                        for(int j2 = j; j2<width; j2++){
+                            if(j2 == width-1){
+                                output += "-1 -1 ";
+                                break;
+                            }
+                            else if(j2<width-1 && grid[j2+1,i] == 1){
+                                output += (j2+1)+" "+i+" ";
+                                break;
+                            }
+                        }
+                        for(int i2 = i; i2<height; i2++){
+                            if(i2 == height-1){
+                                output += "-1 -1";
+                                break;
+                            }
+                            else if(i2<height-1 && grid[j,i2+1] == 1){
+                                output += j+" "+(i2+1);
+                                break;
+                            }
+                        }
+                    Console.WriteLine(output); // Three coordinates: a node, its right neighbor, its bottom neighbor
+                    output = "";
+                    }
+                }
+            }
+            
+        }    
+    }
+}
